@@ -41,8 +41,14 @@ document.getElementById('btnBackToProjects').addEventListener('click', () => {
   showView('myProjects');
 });
 
-// --- ESTADOS DE EDICIÓN, INFO CÁMARA, LENTES Y FILTROS ---
-let editingProjectId = null; // null = Creando, ID = Editando
+// --- ESTADOS DE EDICIÓN, INFO CÁMARA, FILTROS INTERNOS, LENTES Y FILTROS ---
+let editingProjectId = null; 
+
+// Filtros Internos
+let projectInternalFilters = []; 
+const pInternalFilterInput = document.getElementById('p_internal_filter_input');
+const btnAddInternalFilter = document.getElementById('btnAddInternalFilter');
+const savedInternalFiltersContainer = document.getElementById('savedInternalFiltersContainer');
 
 // Lentes
 let tempCurrentSetLenses = [];
@@ -67,6 +73,39 @@ const btnAddFilterToSet = document.getElementById('btnAddFilterToSet');
 const btnAddFilterSet = document.getElementById('btnAddFilterSet');
 const currentFilterSetTags = document.getElementById('currentFilterSetTags');
 const savedFilterSetsContainer = document.getElementById('savedFilterSetsContainer');
+
+// --- GESTIÓN DE FILTROS INTERNOS ---
+if (btnAddInternalFilter) {
+  btnAddInternalFilter.addEventListener('click', () => {
+    const val = pInternalFilterInput.value.trim();
+    if (val && !projectInternalFilters.includes(val)) {
+      projectInternalFilters.push(val);
+      pInternalFilterInput.value = '';
+      renderSavedInternalFilters();
+    }
+  });
+}
+
+function renderSavedInternalFilters() {
+  if (!savedInternalFiltersContainer) return;
+  savedInternalFiltersContainer.innerHTML = '';
+  projectInternalFilters.forEach((filter, index) => {
+    const card = document.createElement('div');
+    card.className = 'lens-set-card';
+    card.innerHTML = `
+      <div class="lens-set-card__header">
+        <h4 class="lens-set-card__title">INT F. - ${filter}</h4>
+        <button type="button" onclick="removeInternalFilter(${index})" style="background:none; border:none; color:var(--text-faint); cursor:pointer;">Borrar</button>
+      </div>
+    `;
+    savedInternalFiltersContainer.appendChild(card);
+  });
+}
+
+window.removeInternalFilter = function(index) {
+  projectInternalFilters.splice(index, 1);
+  renderSavedInternalFilters();
+}
 
 // --- GESTIÓN DE LENTES ---
 btnAddLensToSet.addEventListener('click', () => {
@@ -238,7 +277,7 @@ function renderSavedFilterSets() {
         <h4 class="lens-set-card__title">${set.name}</h4>
         <div>
           <button type="button" onclick="editFilterSet(${index})" style="background:none; border:none; color:var(--amber); cursor:pointer; margin-right:8px;">Editar</button>
-          <button type="button" onclick="removeFilterSet(${index})" style="background:none; border:none; color:var(--text-faint); cursor:pointer;">Borrar</button>
+          <button type="button" onclick="removeLensSet(${index})" style="background:none; border:none; color:var(--text-faint); cursor:pointer;">Borrar</button>
         </div>
       </div>
       <div style="font-size:12px; color:var(--text-lo);">${formattedFilters}</div>
@@ -260,6 +299,10 @@ window.removeFilterSet = function(index) {
 }
 
 function resetSetsForms() {
+  projectInternalFilters = [];
+  if (pInternalFilterInput) pInternalFilterInput.value = '';
+  renderSavedInternalFilters();
+
   tempCurrentSetLenses = [];
   projectLensSets = [];
   editingLensSetIndex = null;
@@ -286,7 +329,6 @@ function openNewProjectCreation() {
   document.getElementById('newProjectForm').reset();
   document.getElementById('p_date').value = todayISO();
   
-  // Limpiar Info Cámara
   document.getElementById('p_cam_letter').value = '';
   document.getElementById('p_cam_model').value = '';
   document.getElementById('p_cam_codec').value = '';
@@ -313,7 +355,6 @@ function openProjectEdit(proj) {
   document.getElementById('p_2ac').value = proj.ac2 || '';
   document.getElementById('p_prod').value = proj.producer || '';
 
-  // Cargar Info Cámara
   document.getElementById('p_cam_letter').value = proj.cameraLetter || '';
   document.getElementById('p_cam_model').value = proj.cameraModel || '';
   document.getElementById('p_cam_codec').value = proj.cameraCodec || '';
@@ -321,6 +362,9 @@ function openProjectEdit(proj) {
   document.getElementById('p_cam_colorspace').value = proj.cameraColorSpace || '';
   document.getElementById('p_cam_aspect').value = proj.cameraAspectRatio || '';
   document.getElementById('p_cam_serial').value = proj.cameraSerial || '';
+
+  projectInternalFilters = proj.internalFilters ? [...proj.internalFilters] : [];
+  renderSavedInternalFilters();
 
   projectLensSets = proj.lensSets ? JSON.parse(JSON.stringify(proj.lensSets)) : [];
   tempCurrentSetLenses = [];
@@ -347,6 +391,12 @@ document.getElementById('btnEditProject').addEventListener('click', () => {
 // --- SUBMIT UNIFICADO DE PROYECTO ---
 document.getElementById('newProjectForm').addEventListener('submit', (e) => {
   e.preventDefault();
+
+  const pendingInternalFilter = pInternalFilterInput ? pInternalFilterInput.value.trim() : '';
+  if (pendingInternalFilter && !projectInternalFilters.includes(pendingInternalFilter)) {
+    projectInternalFilters.push(pendingInternalFilter);
+    if (pInternalFilterInput) pInternalFilterInput.value = '';
+  }
 
   const pendingSetName = pSetName.value.trim();
   const pendingLens = pLensInput.value.trim();
@@ -383,7 +433,6 @@ document.getElementById('newProjectForm').addEventListener('submit', (e) => {
     ac1: document.getElementById('p_1ac').value.trim(),
     ac2: document.getElementById('p_2ac').value.trim(),
     producer: document.getElementById('p_prod').value.trim(),
-    // Info Cámara
     cameraLetter: document.getElementById('p_cam_letter').value.trim(),
     cameraModel: document.getElementById('p_cam_model').value.trim(),
     cameraCodec: document.getElementById('p_cam_codec').value.trim(),
@@ -391,7 +440,7 @@ document.getElementById('newProjectForm').addEventListener('submit', (e) => {
     cameraColorSpace: document.getElementById('p_cam_colorspace').value.trim(),
     cameraAspectRatio: document.getElementById('p_cam_aspect').value.trim(),
     cameraSerial: document.getElementById('p_cam_serial').value.trim(),
-    // Sets
+    internalFilters: [...projectInternalFilters],
     lensSets: JSON.parse(JSON.stringify(projectLensSets)),
     filterSets: JSON.parse(JSON.stringify(projectFilterSets))
   };
@@ -416,6 +465,7 @@ document.getElementById('newProjectForm').addEventListener('submit', (e) => {
       proj.cameraColorSpace = formData.cameraColorSpace;
       proj.cameraAspectRatio = formData.cameraAspectRatio;
       proj.cameraSerial = formData.cameraSerial;
+      proj.internalFilters = formData.internalFilters;
       proj.lensSets = formData.lensSets;
       proj.filterSets = formData.filterSets;
 
@@ -440,7 +490,6 @@ function openProject(proj) {
   currentEntries = loadEntries(proj.id);
   document.getElementById('currentProjectTitle').textContent = proj.name;
   
-  // Cargar Select Lentes
   const lensSelect = document.getElementById('f_lens');
   lensSelect.innerHTML = '<option value="">- Seleccionar lente -</option>';
   if (proj.lensSets && proj.lensSets.length > 0) {
@@ -460,14 +509,30 @@ function openProject(proj) {
     lensSelect.innerHTML = '<option value="">Sin sets de lentes</option>';
   }
 
-  // Cargar Select Filtros para Tomas
-  loadFiltersIntoSelect(proj);
+  const internalFilterSelect = document.getElementById('f_internal_filter');
+  if (internalFilterSelect) {
+    internalFilterSelect.innerHTML = '<option value="">- Sin filtro interno -</option>';
+    if (proj.internalFilters && proj.internalFilters.length > 0) {
+      proj.internalFilters.forEach(f => {
+        const opt = document.createElement('option');
+        opt.value = f;
+        opt.textContent = `INT F. - ${f}`;
+        internalFilterSelect.appendChild(opt);
+      });
+    } else {
+      const opt = document.createElement('option');
+      opt.value = "";
+      opt.textContent = "Sin filtros internos configurados";
+      internalFilterSelect.appendChild(opt);
+    }
+  }
 
+  loadFiltersIntoSelect(proj);
   renderEntries();
   showView('entries');
 }
 
-// --- ESTADOS PARA TOMAS (Múltiples filtros y Edición) ---
+// --- ESTADOS PARA TOMAS ---
 let tempEntryFilters = [];
 let editingEntryId = null; 
 
@@ -524,7 +589,6 @@ function loadFiltersIntoSelect(proj) {
   }
 }
 
-// --- TOMAS SUBMIT (CREAR / EDITAR) ---
 let goodPressed = false;
 const goodToggle = document.getElementById('goodToggle');
 goodToggle.addEventListener('click', () => {
@@ -540,18 +604,22 @@ document.getElementById('entryForm').addEventListener('submit', (e) => {
     roll: document.getElementById('f_roll').value.trim(),
     card: document.getElementById('f_card').value.trim(),
     clip: document.getElementById('f_clip').value.trim(),
-    scene: document.getElementById('f_scene').value.trim(),
+    internalFilter: document.getElementById('f_internal_filter') ? document.getElementById('f_internal_filter').value.trim() : '',
+    sequence: document.getElementById('f_sequence').value.trim(),
+    shot: document.getElementById('f_shot').value.trim(),
     take: document.getElementById('f_take').value.trim(),
     lens: document.getElementById('f_lens').value.trim(),
     filters: [...tempEntryFilters],
     ft: document.getElementById('f_ft').value.trim(),
     k: document.getElementById('f_k').value.trim(),
     iso: document.getElementById('f_iso').value.trim(),
+    shutter: document.getElementById('f_shutter').value.trim(),
+    fps: document.getElementById('f_fps').value.trim(),
     note: document.getElementById('f_note').value.trim(),
     good: goodPressed
   };
 
-  if (!entryData.scene || !entryData.take) return;
+  if (!entryData.sequence || !entryData.shot || !entryData.take) return;
 
   if (editingEntryId) {
     const entry = currentEntries.find(en => en.id === editingEntryId);
@@ -561,6 +629,10 @@ document.getElementById('entryForm').addEventListener('submit', (e) => {
     editingEntryId = null;
     btnSubmitEntry.textContent = 'Guardar toma';
     btnCancelEditEntry.classList.add('hidden');
+    
+    e.target.reset();
+    tempEntryFilters = [];
+    renderEntryFilterTags();
   } else {
     const entry = {
       id: uid(),
@@ -568,17 +640,38 @@ document.getElementById('entryForm').addEventListener('submit', (e) => {
       ...entryData
     };
     currentEntries.unshift(entry);
+    saveEntries(currentProjectId, currentEntries);
+    renderEntries();
+
+    const currentTakeNum = parseInt(entryData.take, 10);
+    if (!isNaN(currentTakeNum)) {
+      document.getElementById('f_take').value = currentTakeNum + 1;
+    }
+
+    const currentClipVal = entryData.clip;
+    if (currentClipVal) {
+      const clipNum = parseInt(currentClipVal, 10);
+      if (!isNaN(clipNum)) {
+        const paddingLength = currentClipVal.length;
+        document.getElementById('f_clip').value = String(clipNum + 1).padStart(paddingLength, '0');
+      }
+    }
+
+    document.getElementById('f_note').value = '';
+    goodPressed = false;
+    goodToggle.setAttribute('aria-pressed', 'false');
+    document.getElementById('f_take').focus();
+    return;
   }
 
   saveEntries(currentProjectId, currentEntries);
   renderEntries();
-
   e.target.reset();
   tempEntryFilters = [];
   renderEntryFilterTags();
   goodPressed = false;
   goodToggle.setAttribute('aria-pressed', 'false');
-  document.getElementById('f_scene').focus();
+  document.getElementById('f_sequence').focus();
 });
 
 btnCancelEditEntry.addEventListener('click', () => {
@@ -609,12 +702,18 @@ function editEntry(id) {
   document.getElementById('f_roll').value = entry.roll || '';
   document.getElementById('f_card').value = entry.card || '';
   document.getElementById('f_clip').value = entry.clip || '';
-  document.getElementById('f_scene').value = entry.scene || '';
+  if (document.getElementById('f_internal_filter')) {
+    document.getElementById('f_internal_filter').value = entry.internalFilter || '';
+  }
+  document.getElementById('f_sequence').value = entry.sequence || '';
+  document.getElementById('f_shot').value = entry.shot || '';
   document.getElementById('f_take').value = entry.take || '';
   document.getElementById('f_lens').value = entry.lens || '';
   document.getElementById('f_ft').value = entry.ft || '';
   document.getElementById('f_k').value = entry.k || '';
   document.getElementById('f_iso').value = entry.iso || '';
+  document.getElementById('f_shutter').value = entry.shutter || '';
+  document.getElementById('f_fps').value = entry.fps || '';
   document.getElementById('f_note').value = entry.note || '';
   
   tempEntryFilters = entry.filters ? [...entry.filters] : (entry.filter ? [entry.filter] : []);
@@ -639,6 +738,8 @@ function renderEntries() {
     return;
   }
 
+  const currentProj = projects.find(p => p.id === currentProjectId) || {};
+
   currentEntries.forEach(en => {
     const row = document.createElement('div');
     row.className = 'entry' + (en.good ? ' entry--good' : '');
@@ -648,24 +749,57 @@ function renderEntries() {
     
     const entryFiltersList = en.filters && en.filters.length > 0 ? en.filters : (en.filter ? [en.filter] : []);
     
-    const metaBits = [
-      en.roll ? `R:${en.roll}` : '',
-      en.card ? `C:${en.card}` : '',
-      en.clip ? `Cl:${en.clip}` : '',
-      en.lens,
-      ...entryFiltersList,
+    const clipDisplay = en.clip ? `Clip ${en.clip}` : '';
+    const seqShotTakeDisplay = `Sec ${en.sequence} - ${en.shot} T${en.take}`;
+    
+    const camLetter = currentProj.cameraLetter || '';
+    const rollCombined = en.roll ? `${camLetter}${en.roll}` : '';
+    const infoLines = [
+      rollCombined ? `Roll: ${rollCombined}` : '',
+      en.card ? `Card: ${en.card}` : ''
+    ].filter(Boolean);
+    const infoContent = infoLines.length > 0 ? infoLines.join('<br>') : '';
+
+    const opticsContent = en.lens ? `${en.lens}` : '';
+
+    const allFiltersLines = [
+      en.internalFilter ? en.internalFilter : '',
+      ...entryFiltersList
+    ].filter(Boolean);
+    const filtersContent = allFiltersLines.length > 0 ? allFiltersLines.map(f => `${f}`).join('<br>') : '';
+
+    const camInfoLines = [
       en.ft ? `F/T: ${en.ft}` : '',
-      en.k ? `${en.k}K` : '',
-      en.iso ? `ISO ${en.iso}` : ''
-    ].filter(Boolean).map(m => `<span>${m}</span>`).join('');
+      en.k ? `K: ${en.k}` : '',
+      en.iso ? `ISO: ${en.iso}` : '',
+      en.fps ? `FPS: ${en.fps}` : ''
+    ].filter(Boolean);
+    const camInfoContent = camInfoLines.length > 0 ? camInfoLines.join('<br>') : '';
+
+    const notesContent = en.note ? en.note : '';
+
+    const columnsData = [
+      infoContent ? `<div style="flex: 1 1 45%; font-size: 11px; color: var(--text-lo); background: var(--surface-2, #1a1a1a); padding: 6px; border-radius: 4px; box-sizing: border-box;"><b>INFO</b><br>${infoContent}</div>` : '',
+      opticsContent ? `<div style="flex: 1 1 45%; font-size: 11px; color: var(--text-lo); background: var(--surface-2, #1a1a1a); padding: 6px; border-radius: 4px; box-sizing: border-box;"><b>OPTICA</b><br>${opticsContent}</div>` : '',
+      filtersContent ? `<div style="flex: 1 1 45%; font-size: 11px; color: var(--text-lo); background: var(--surface-2, #1a1a1a); padding: 6px; border-radius: 4px; box-sizing: border-box;"><b>FILTROS</b><br>${filtersContent}</div>` : '',
+      camInfoContent ? `<div style="flex: 1 1 45%; font-size: 11px; color: var(--text-lo); background: var(--surface-2, #1a1a1a); padding: 6px; border-radius: 4px; box-sizing: border-box;"><b>INFO CAM</b><br>${camInfoContent}</div>` : ''
+    ].filter(Boolean).join('');
+
+    const notesBlock = notesContent ? `<div style="width: 100%; font-size: 11px; color: var(--text-lo); background: var(--surface-2, #1a1a1a); padding: 6px; border-radius: 4px; box-sizing: border-box; margin-top: 6px;"><b>NOTAS</b><br>${notesContent}</div>` : '';
     
     row.innerHTML = `
       <div class="entry__mark">${markHtml}</div>
       <div class="entry__body">
-        <div class="entry__head"><span class="entry__scene">${en.scene}</span><span class="entry__take">T${en.take}</span></div>
-        ${metaBits ? `<div class="entry__meta">${metaBits}</div>` : ''}
-        ${en.note ? `<p class="entry__note">${en.note}</p>` : ''}
-        <div style="display:flex; gap:10px; margin-top:6px;">
+        <div class="entry__head">
+          <span class="entry__scene" style="font-size: 15px; color: var(--amber);">
+            ${clipDisplay ? `${clipDisplay} &nbsp;&nbsp;|&nbsp;&nbsp; ${seqShotTakeDisplay}` : seqShotTakeDisplay}
+          </span>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px;">
+          ${columnsData}
+          ${notesBlock}
+        </div>
+        <div style="display:flex; gap:10px; margin-top:8px;">
           <button type="button" class="btn-card-action btn-edit-entry" data-id="${en.id}" style="font-size:10px; padding:2px 6px;">Editar</button>
           <button type="button" class="btn-card-action btn-delete-entry" data-id="${en.id}" style="font-size:10px; padding:2px 6px; color:#B84C3E;">Borrar</button>
         </div>
@@ -751,7 +885,7 @@ function renderProjects() {
           <span class="project-card__date">${proj.date}</span>
         </div>
         ${proj.director ? `<div class="project-card__meta">Dir: ${proj.director}</div>` : ''}
-        ${proj.location ? `<div class="project-card__meta">Loc: ${proj.location}</div>` : ''}
+        ${proj.dop ? `<div class="project-card__meta">DOP: ${proj.dop}</div>` : ''}
         
         <div class="project-card__buttons">
           <button type="button" class="btn-card-action btn-edit-card" data-id="${proj.id}">Editar</button>
@@ -787,4 +921,160 @@ function renderProjects() {
 
     container.appendChild(card);
   });
+}
+
+// --- EXPORTAR A PDF (IMPRESIÓN NATIVA ESTILIZADA SIN INTERFERIR EN LA VISTA) ---
+document.addEventListener('DOMContentLoaded', () => {
+  const entriesTopbar = document.querySelector('#view-entries .topbar');
+  if (entriesTopbar) {
+    const btnExport = document.createElement('button');
+    btnExport.textContent = 'Guardar y Exportar a PDF';
+    btnExport.style.cssText = 'background: var(--amber); color: #000; border: none; padding: 6px 10px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: bold; margin-left: auto;';
+    btnExport.onclick = exportToPDF;
+    
+    entriesTopbar.style.display = 'flex';
+    entriesTopbar.style.alignItems = 'center';
+    entriesTopbar.appendChild(btnExport);
+  }
+
+  // Estilos de impresión profesionales orientados a hoja horizontal (landscape)
+  const printStyle = document.createElement('style');
+  printStyle.innerHTML = `
+    @media print {
+      @page {
+        size: landscape;
+        margin: 1cm;
+      }
+      body { background: #fff !important; color: #000 !important; margin: 0; padding: 0; }
+      
+      /* Oculta toda la app para mostrar solo el reporte de impresión */
+      #view-home, #view-new-project, #view-my-projects, #view-entries > *:not(#printArea), .bottom-nav { display: none !important; }
+      
+      #printArea { display: block !important; width: 100%; max-width: 100%; color: #000; font-family: sans-serif; }
+      
+      .pdf-header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; }
+      .pdf-header h1 { font-size: 24px; margin: 0; font-weight: 800; letter-spacing: 1px; }
+      .pdf-header h2 { font-size: 16px; margin: 5px 0 0 0; font-weight: 600; text-transform: uppercase; }
+      
+      .pdf-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; font-size: 11px; line-height: 1.4; width: 100%; }
+      .pdf-info-box { border: 1px solid #000; padding: 10px; border-radius: 4px; }
+      .pdf-info-box strong { font-size: 12px; display: block; border-bottom: 1px solid #ccc; margin-bottom: 5px; padding-bottom: 3px; }
+      
+      .pdf-table { width: 100%; max-width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 10px; page-break-inside: auto; table-layout: auto; }
+      .pdf-table tr { page-break-inside: avoid; page-break-after: auto; }
+      .pdf-table th, .pdf-table td { border: 1px solid #000; padding: 4px; text-align: left; vertical-align: top; color: #000; }
+      .pdf-table th { background-color: #e0e0e0 !important; -webkit-print-color-adjust: exact; font-weight: bold; text-align: center; white-space: nowrap; }
+      .pdf-table td { text-align: center; }
+      
+      .pdf-table td:nth-child(15) { text-align: left; }
+      
+      .pdf-take-good td { background-color: #d4edda !important; -webkit-print-color-adjust: exact; }
+    }
+  `;
+  document.head.appendChild(printStyle);
+});
+
+function exportToPDF() {
+  const proj = projects.find(p => p.id === currentProjectId);
+  if (!proj) return;
+
+  // Creamos temporalmente el contenedor de impresión si no existe
+  let printArea = document.getElementById('printArea');
+  if (!printArea) {
+    printArea = document.createElement('div');
+    printArea.id = 'printArea';
+    document.getElementById('view-entries').appendChild(printArea);
+  }
+
+  const chronologicalEntries = [...currentEntries].reverse();
+
+  let tableRows = chronologicalEntries.map(en => {
+    const entryFiltersList = en.filters && en.filters.length > 0 ? en.filters : (en.filter ? [en.filter] : []);
+    const multipleFilters = entryFiltersList.join(', ');
+    const internalFilterClean = en.internalFilter || '';
+    
+    const camLetter = proj.cameraLetter || '';
+    const rollDisplay = en.roll ? `${camLetter}${en.roll}` : '';
+
+    return `
+      <tr class="${en.good ? 'pdf-take-good' : ''}">
+        <td>${rollDisplay}</td>
+        <td>${en.card || ''}</td>
+        <td>${en.clip || ''}</td>
+        <td>${en.sequence || ''}</td>
+        <td>${en.shot || ''}</td>
+        <td>${en.take || ''}</td>
+        <td>${en.lens || ''}</td>
+        <td>${en.ft || ''}</td>
+        <td>${en.k ? en.k + 'K' : ''}</td>
+        <td>${en.iso || ''}</td>
+        <td>${en.fps || ''}</td>
+        <td>${internalFilterClean}</td>
+        <td>${multipleFilters}</td>
+        <td style="text-align: left;">${en.note || ''}</td>
+        <td>${en.good ? '★' : ''}</td>
+      </tr>
+    `;
+  }).join('');
+
+  printArea.innerHTML = `
+    <div class="pdf-header">
+      <h1>CAMERA REPORT</h1>
+      <h2>${proj.name}</h2>
+    </div>
+    
+    <div class="pdf-info-grid">
+      <div class="pdf-info-box">
+        <strong>INFO PROYECTO</strong>
+        Fecha: ${proj.date || ''}<br>
+        Director: ${proj.director || ''}<br>
+        DOP: ${proj.dop || ''}<br>
+        Productora: ${proj.producer || ''}<br>
+        Loc: ${proj.location || ''}<br>
+        1AC: ${proj.ac1 || ''} | 2AC: ${proj.ac2 || ''}
+      </div>
+      <div class="pdf-info-box">
+        <strong>INFO CÁMARA</strong>
+        Modelo: ${proj.cameraLetter || ''} - ${proj.cameraModel || ''}<br>
+        Códec: ${proj.cameraCodec || ''}<br>
+        Res: ${proj.cameraResolution || ''}<br>
+        Color: ${proj.cameraColorSpace || ''}<br>
+        Aspect: ${proj.cameraAspectRatio || ''}<br>
+        S/N: ${proj.cameraSerial || ''}
+      </div>
+    </div>
+
+    <table class="pdf-table">
+      <thead>
+        <tr>
+          <th>ROLL</th>
+          <th>CARD</th>
+          <th>CLIP</th>
+          <th>SEC</th>
+          <th>PLANO</th>
+          <th>TOMA</th>
+          <th>ÓPTICA</th>
+          <th>F/T</th>
+          <th>K</th>
+          <th>ISO</th>
+          <th>FPS</th>
+          <th>INT F</th>
+          <th>FILTROS</th>
+          <th>NOTAS</th>
+          <th>★</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${tableRows}
+      </tbody>
+    </table>
+  `;
+
+  // Lanzamos la orden de impresión nativa
+  window.print();
+
+  // Limpiamos inmediatamente el contenido de impresión para que la app web en pantalla siga intacta y editable
+  setTimeout(() => {
+    printArea.innerHTML = '';
+  }, 500);
 }

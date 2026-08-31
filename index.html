@@ -117,6 +117,20 @@
 <!-- SETS DE FILTROS -->
         <div class="panel" style="margin-top: 24px; padding: 16px; background: var(--surface-2); border-radius: 6px;">
           <h3 style="margin: 0 0 12px; font-family: var(--font-display); font-size: 14px; color: var(--amber);">SETS DE FILTROS</h3>
+          <!-- FILTROS INTERNOS -->
+        <div class="panel" style="margin-top: 24px; padding: 16px; background: var(--surface-2); border-radius: 6px;">
+          <h3 style="margin: 0 0 12px; font-family: var(--font-display); font-size: 14px; color: var(--amber);">FILTROS INTERNOS</h3>
+          
+          <div class="field" style="margin-bottom: 12px;">
+            <span>Añadir filtro interno (Ej. ND 0.6, Clear...)</span>
+            <div class="field-row">
+              <input type="text" id="p_internal_filter_input" placeholder="Ej. ND 0.9">
+              <button type="button" id="btnAddInternalFilter" class="btn-secondary" style="flex: 0 0 60px;">+</button>
+            </div>
+          </div>
+
+          <div id="savedInternalFiltersContainer" style="margin-top: 8px;"></div>
+        </div>
           
           <div class="field" style="margin-bottom: 12px;">
             <span>Nombre del Set (Ej. NDs Firecrest, Polarizadores...)</span>
@@ -159,8 +173,6 @@
   </main>
 
   <!-- PANTALLA 4: REGISTRO DE TOMAS -->
-
-  <!-- PANTALLA 4: REGISTRO DE TOMAS -->
   <main id="view-entries" class="screen-layout hidden">
     <header class="topbar">
       <div style="display:flex; align-items:center; gap:6px;">
@@ -191,23 +203,35 @@
           </label>
         </div>
 
-        <!-- Fila 2: Escena y Toma -->
+        <!-- Fila 4: Secuencia, Plano y Toma (Texto libre) -->
         <div class="field-row" style="margin-bottom: 12px;">
           <label class="field">
-            <span>Escena *</span>
-            <input type="text" id="f_scene" required placeholder="12">
+            <span>Secuencia *</span>
+            <input type="text" id="f_sequence" required placeholder="Ej. 1 o A">
+          </label>
+          <label class="field">
+            <span>Plano *</span>
+            <input type="text" id="f_shot" required placeholder="Ej. 1 o B">
           </label>
           <label class="field">
             <span>Toma *</span>
-            <input type="text" id="f_take" required placeholder="1">
+            <input type="text" id="f_take" required placeholder="Ej. 1 o Ext">
           </label>
         </div>
 
-        <!-- Fila 3: Lente y Filtros -->
+        <!-- LÍNEA 1: LENTE EN SOLITARIO (ANCHO COMPLETO) -->
+        <div class="field-row" style="margin-bottom: 12px;">
+          <label class="field" style="width: 100%;">
+            <span>Lente</span>
+            <select id="f_lens" style="width: 100%;"></select>
+          </label>
+        </div>
+
+        <!-- LÍNEA 2: FILTROS (Filtro Interno + Selector múltiple de filtros) -->
         <div class="field-row" style="margin-bottom: 8px;">
           <label class="field" style="flex: 1;">
-            <span>Lente</span>
-            <select id="f_lens"></select>
+            <span>Filtro Interno (INT F.)</span>
+            <select id="f_internal_filter"></select>
           </label>
           <label class="field" style="flex: 2;">
             <span>Filtros de la toma</span>
@@ -234,10 +258,21 @@
             <input type="text" inputmode="numeric" pattern="[0-9]*" id="f_iso" placeholder="Ej. 800">
           </label>
         </div>
+        <!-- NUEVA Fila: Shutter y FPS (Solo números) -->
+        <div class="field-row" style="margin-bottom: 12px;">
+          <label class="field">
+            <span>Shutter (Obturador)</span>
+            <input type="text" inputmode="numeric" pattern="[0-9]*" id="f_shutter" placeholder="Ej. 180">
+          </label>
+          <label class="field">
+            <span>FPS (Fotogramas por segundo)</span>
+            <input type="text" inputmode="numeric" pattern="[0-9]*" id="f_fps" placeholder="Ej. 25">
+          </label>
+        </div>
 
         <!-- Fila 5: Comentarios / Notas -->
         <label class="field" style="margin-bottom: 16px;">
-          <span>Comentarios</span>
+          <span>Notas</span>
           <input type="text" id="f_note" placeholder="Notas de script o cámara...">
         </label>
         
