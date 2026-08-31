@@ -3,102 +3,257 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Registro de Cámara</title>
-
+<title>Report Camera</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#1A1816">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Cam Log">
-<link rel="apple-touch-icon" href="icons/icon-192.png">
-
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<header class="topbar">
-  <div class="topbar__mark">
-    <div class="clapper" aria-hidden="true">
-      <span></span><span></span><span></span><span></span><span></span>
-    </div>
-  </div>
-  <div class="topbar__title">
-    <h1>Registro de cámara</h1>
-    <p id="todayLabel" class="topbar__date"></p>
-  </div>
-  <div class="topbar__count">
-    <span id="countNumber">0</span>
-    <small>tomas</small>
-  </div>
-</header>
-
-<main>
-
-  <section class="panel entry-panel" aria-labelledby="entryHeading">
-    <h2 id="entryHeading" class="panel__label">Nueva toma</h2>
-
-    <form id="entryForm" autocomplete="off">
-      <div class="field-row">
-        <label class="field">
-          <span>Escena / Setup</span>
-          <input type="text" id="f_scene" placeholder="12A" required>
-        </label>
-        <label class="field field--narrow">
-          <span>Toma</span>
-          <input type="text" id="f_take" inputmode="numeric" placeholder="1" required>
-        </label>
+  <!-- PANTALLA 1: INICIO -->
+  <main id="view-home" class="home-screen">
+    <div class="home-content">
+      <div class="logo"><div class="clapper"><span></span><span></span><span></span><span></span><span></span></div></div>
+      <h1 class="main-title">REPORT CAMERA</h1>
+      <div class="home-buttons">
+        <button id="btnNewProject" class="btn-primary">NUEVO PROYECTO</button>
+        <button id="btnMyProjects" class="btn-secondary">MIS PROYECTOS</button>
       </div>
-
-      <div class="field-row">
-        <label class="field">
-          <span>Lente</span>
-          <input type="text" id="f_lens" placeholder="35mm">
-        </label>
-        <label class="field">
-          <span>Filtro</span>
-          <input type="text" id="f_filter" placeholder="ND 0.6">
-        </label>
-      </div>
-
-      <label class="field">
-        <span>Notas</span>
-        <textarea id="f_note" rows="2" placeholder="Detalles de la toma, encuadre, incidencias…"></textarea>
-      </label>
-
-      <div class="field-row field-row--actions">
-        <button type="button" id="goodToggle" class="good-toggle" aria-pressed="false">
-          <span class="good-toggle__ring" aria-hidden="true"></span>
-          Toma buena
-        </button>
-        <button type="submit" class="btn-primary">Guardar toma</button>
-      </div>
-    </form>
-  </section>
-
-  <section class="panel log-panel" aria-labelledby="logHeading">
-    <div class="log-panel__header">
-      <h2 id="logHeading" class="panel__label">Registro</h2>
-      <button id="clearAll" class="btn-ghost" type="button">Borrar todo</button>
     </div>
+  </main>
 
-    <div id="logList" class="log-list">
-      <p id="emptyState" class="empty-state">Todavía no has registrado ninguna toma. Usa el formulario de arriba para empezar.</p>
+  <!-- PANTALLA 2: NUEVO PROYECTO -->
+  <main id="view-new-project" class="screen-layout hidden">
+    <header class="topbar">
+      <button id="btnBackHome" class="btn-icon">←</button>
+      <h2 class="topbar-title">Crear Proyecto</h2>
+      <div style="width: 32px;"></div>
+    </header>
+    <div class="content-scroll">
+      <form id="newProjectForm" class="project-form">
+        <label class="field"><span>Nombre del proyecto *</span><input type="text" id="p_name" required></label>
+        <div class="field-row">
+          <label class="field"><span>Fecha</span><input type="date" id="p_date" required></label>
+          <label class="field"><span>Localización</span><input type="text" id="p_loc"></label>
+        </div>
+        <div class="field-row">
+          <label class="field"><span>Director</span><input type="text" id="p_dir"></label>
+          <label class="field"><span>DOP</span><input type="text" id="p_dop"></label>
+        </div>
+        <div class="field-row">
+          <label class="field"><span>1st AC</span><input type="text" id="p_1ac"></label>
+          <label class="field"><span>2nd AC</span><input type="text" id="p_2ac"></label>
+        </div>
+        <label class="field"><span>Productora</span><input type="text" id="p_prod"></label>
+        <!-- NUEVO: INFO CÁMARA -->
+        <div class="panel" style="margin-top: 24px; padding: 16px; background: var(--surface-2); border-radius: 6px;">
+          <h3 style="margin: 0 0 12px; font-family: var(--font-display); font-size: 14px; color: var(--amber);">INFO CÁMARA</h3>
+          
+          <div class="field-row" style="margin-bottom: 12px;">
+            <label class="field" style="flex: 1;">
+              <span>Cámara (A, B, C...)</span>
+              <input type="text" id="p_cam_letter" placeholder="Ej. A">
+            </label>
+            <label class="field" style="flex: 3;">
+              <span>Modelo de Cámara</span>
+              <input type="text" id="p_cam_model" placeholder="Ej. ARRI Alexa Mini LF">
+            </label>
+          </div>
+
+          <div class="field-row" style="margin-bottom: 12px;">
+            <label class="field">
+              <span>Códec</span>
+              <input type="text" id="p_cam_codec" placeholder="Ej. ProRes 4444 XQ">
+            </label>
+            <label class="field">
+              <span>Resolución</span>
+              <input type="text" id="p_cam_res" placeholder="Ej. 4K UHD">
+            </label>
+          </div>
+
+          <div class="field-row" style="margin-bottom: 12px;">
+            <label class="field">
+              <span>Espacio de Color</span>
+              <input type="text" id="p_cam_colorspace" placeholder="Ej. LogC4 / Wide Gamut 4">
+            </label>
+            <label class="field">
+              <span>Relación de Aspecto</span>
+              <input type="text" id="p_cam_aspect" placeholder="Ej. 2.39:1 / 16:9">
+            </label>
+          </div>
+
+          <label class="field">
+            <span>Nº de Serie</span>
+            <input type="text" id="p_cam_serial" placeholder="Ej. S/N 12345">
+          </label>
+        </div>
+        <!-- SETS DE LENTES MÚLTIPLES -->
+        <div class="panel" style="margin-top: 24px; padding: 16px; background: var(--surface-2); border-radius: 6px;">
+          <h3 style="margin: 0 0 12px; font-family: var(--font-display); font-size: 14px; color: var(--amber);">SETS DE LENTES</h3>
+          
+          <div class="field" style="margin-bottom: 12px;">
+            <span>Nombre del Set (Ej. Fijas Zeiss, Zoom Cine...)</span>
+            <input type="text" id="p_set_name" placeholder="Ej. Set 1">
+          </div>
+
+          <div class="field" style="margin-bottom: 12px;">
+            <span>Añadir lente o rango al set (Ej. 35 o 24-70)</span>
+            <div class="field-row">
+              <input type="text" id="p_lens_input" placeholder="Ej. 50">
+              <button type="button" id="btnAddLensToSet" class="btn-secondary" style="flex: 0 0 60px;">+</button>
+            </div>
+          </div>
+        
+
+          <!-- Contenedor donde se visualizan las lentes que vas añadiendo al set actual -->
+          <div id="currentSetTags" class="lens-tags" style="margin-bottom: 16px;"></div>
+
+          <button type="button" id="btnAddSet" class="btn-secondary" style="width: 100%; border-style: dashed;">+ GUARDAR ESTE SET</button>
+
+          <!-- Listado de sets ya añadidos al proyecto -->
+          <div id="savedSetsContainer" style="margin-top: 16px;"></div>
+        </div>
+<!-- SETS DE FILTROS -->
+        <div class="panel" style="margin-top: 24px; padding: 16px; background: var(--surface-2); border-radius: 6px;">
+          <h3 style="margin: 0 0 12px; font-family: var(--font-display); font-size: 14px; color: var(--amber);">SETS DE FILTROS</h3>
+          
+          <div class="field" style="margin-bottom: 12px;">
+            <span>Nombre del Set (Ej. NDs Firecrest, Polarizadores...)</span>
+            <input type="text" id="p_filter_set_name" placeholder="Ej. Set NDs">
+          </div>
+
+          <div class="field" style="margin-bottom: 12px;">
+            <span>Añadir filtro al set (Ej. ND 0.6, Pola, Black Pro-Mist 1/8)</span>
+            <div class="field-row">
+              <input type="text" id="p_filter_input" placeholder="Ej. ND 0.9">
+              <button type="button" id="btnAddFilterToSet" class="btn-secondary" style="flex: 0 0 60px;">+</button>
+            </div>
+          </div>
+
+          <div id="currentFilterSetTags" class="lens-tags" style="margin-bottom: 16px;"></div>
+
+          <button type="button" id="btnAddFilterSet" class="btn-secondary" style="width: 100%; border-style: dashed;">+ GUARDAR ESTE SET DE FILTROS</button>
+
+          <div id="savedFilterSetsContainer" style="margin-top: 16px;"></div>
+        </div>
+        <div style="margin-top: 32px;"><button type="submit" class="btn-primary">INICIAR RODAJE</button></div>
+      </form>
     </div>
-  </section>
+  </main>
 
-</main>
+  <!-- PANTALLA 3: MIS PROYECTOS -->
+  <main id="view-my-projects" class="screen-layout hidden">
+    <header class="topbar">
+      <button id="btnBackFromProjects" class="btn-icon">←</button>
+      <h2 class="topbar-title">Mis Proyectos</h2>
+      <button id="btnToggleSelect" class="btn-secondary" style="padding: 4px 8px; font-size: 11px; height: 30px; border-radius: 4px;">Seleccionar</button>
+    </header>
+    
+    <div class="content-scroll" id="projectListContainer"></div>
+    
+    <div class="dock" style="display: flex; gap: 10px;">
+      <button id="btnListNewProject" class="btn-primary" style="flex: 1;">+ NUEVO PROYECTO</button>
+      <button id="btnDeleteSelected" class="btn-secondary hidden" style="flex: 1; border-color: #B84C3E; color: #B84C3E;">BORRAR SELECCIONADOS</button>
+    </div>
+  </main>
 
-<div class="dock">
-  <button id="exportPdf" class="btn-export" type="button">
-    Exportar PDF
-  </button>
-</div>
+  <!-- PANTALLA 4: REGISTRO DE TOMAS -->
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="app.js"></script>
+  <!-- PANTALLA 4: REGISTRO DE TOMAS -->
+  <main id="view-entries" class="screen-layout hidden">
+    <header class="topbar">
+      <div style="display:flex; align-items:center; gap:6px;">
+        <button id="btnBackToProjects" class="btn-icon">←</button>
+        <button id="btnEditProject" class="btn-secondary" style="padding: 4px 8px; font-size: 11px; height: 30px; border-radius: 4px;">Editar</button>
+      </div>
+      <h2 id="currentProjectTitle" class="topbar-title">Rodaje</h2>
+      <div style="text-align:right; font-size:12px; color:var(--amber);" id="countNumber">0 tomas</div>
+    </header>
+    
+    <div class="content-scroll">
+      <!-- Formulario de Tomas Actualizado -->
+      <form id="entryForm" class="panel" style="margin: 16px; padding: 16px;">
+        
+        <!-- Fila 1: Roll, Card, Clip (Teclados numéricos estrictos) -->
+        <div class="field-row" style="margin-bottom: 12px;">
+          <label class="field">
+            <span>Roll</span>
+            <input type="text" inputmode="numeric" pattern="[0-9]*" id="f_roll" placeholder="Ej. 1">
+          </label>
+          <label class="field">
+            <span>Card</span>
+            <input type="text" inputmode="numeric" pattern="[0-9]*" id="f_card" placeholder="Ej. A01">
+          </label>
+          <label class="field">
+            <span>Clip</span>
+            <input type="text" inputmode="numeric" pattern="[0-9]*" id="f_clip" placeholder="Ej. 001">
+          </label>
+        </div>
+
+        <!-- Fila 2: Escena y Toma -->
+        <div class="field-row" style="margin-bottom: 12px;">
+          <label class="field">
+            <span>Escena *</span>
+            <input type="text" id="f_scene" required placeholder="12">
+          </label>
+          <label class="field">
+            <span>Toma *</span>
+            <input type="text" id="f_take" required placeholder="1">
+          </label>
+        </div>
+
+        <!-- Fila 3: Lente y Filtros -->
+        <div class="field-row" style="margin-bottom: 8px;">
+          <label class="field" style="flex: 1;">
+            <span>Lente</span>
+            <select id="f_lens"></select>
+          </label>
+          <label class="field" style="flex: 2;">
+            <span>Filtros de la toma</span>
+            <div class="field-row" style="margin: 0; gap: 6px;">
+              <select id="f_filter_select" style="flex: 1;"></select>
+              <button type="button" id="btnAddFilterToEntry" class="btn-secondary" style="flex: 0 0 44px; font-size: 20px; padding: 0;">+</button>
+            </div>
+          </label>
+        </div>
+        <div id="entryFilterTags" class="lens-tags" style="margin-bottom: 12px;"></div>
+
+        <!-- Fila 4: T/Stop (F/T), Temperatura (Kº) e ISO -->
+        <div class="field-row" style="margin-bottom: 12px;">
+          <label class="field">
+            <span>F/T (Diafragma)</span>
+            <input type="text" id="f_ft" placeholder="Ej. T2.8">
+          </label>
+          <label class="field">
+            <span>Kº (Kelvin)</span>
+            <input type="text" inputmode="numeric" pattern="[0-9]*" id="f_k" placeholder="Ej. 5600">
+          </label>
+          <label class="field">
+            <span>ISO</span>
+            <input type="text" inputmode="numeric" pattern="[0-9]*" id="f_iso" placeholder="Ej. 800">
+          </label>
+        </div>
+
+        <!-- Fila 5: Comentarios / Notas -->
+        <label class="field" style="margin-bottom: 16px;">
+          <span>Comentarios</span>
+          <input type="text" id="f_note" placeholder="Notas de script o cámara...">
+        </label>
+        
+        <!-- Botones de Acción -->
+        <div class="field-row">
+          <button type="button" id="goodToggle" class="btn-secondary" style="flex:1;" aria-pressed="false">Toma buena</button>
+          <button type="submit" id="btnSubmitEntry" class="btn-primary" style="flex:1.5;">Guardar toma</button>
+          <button type="button" id="btnCancelEditEntry" class="btn-secondary hidden" style="flex:0.8; border-color: #B84C3E; color: #B84C3E;">Cancelar</button>
+        </div>
+      </form>
+
+      <div class="log-list" id="logList"></div>
+    </div>
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
