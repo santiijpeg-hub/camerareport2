@@ -11,6 +11,167 @@ function saveEntries(id, entries) { localStorage.setItem(getEntriesKey(id), JSON
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
 function todayISO() { return new Date().toISOString().slice(0, 10); }
 
+// Lista de cámaras disponibles para el selector desplegable
+const CAMERA_MODELS = [
+  "ARRI ALEXA 35",
+  "ARRI ALEXA MINI",
+  "ARRI ALEXA MINI LF",
+  "ARRIFLEX SR3",
+  "FX3",
+  "FX6",
+  "BMPCC6K",
+  "BMPCC4K",
+  "RED KOMODO 6K",
+  "RED V-RAPTOR 8K VV"
+];
+
+// Configuración de especificaciones por cámara (Codecs, Resoluciones y Espacio de Color)
+const CAMERA_SPECS = {
+  "ARRI ALEXA 35": {
+    codecs: ["ARRIRAW", "Apple ProRes 4444 XQ", "Apple ProRes 4444", "Apple ProRes 422 HQ"],
+    resolutions: [
+      "4.6K 3:2 Open Gate",
+      "4.6K 16:9",
+      "4K 16:9",
+      "4K 2:1",
+      "3.8K 16:9",
+      "3.3K 6:5",
+      "3K 1:1",
+      "2.7K 8:9",
+      "2K 16:9 S16"
+    ],
+    fixedColorSpace: "Log C4"
+  },
+  "ARRI ALEXA MINI": {
+    codecs: ["ARRIRAW", "ProRes 4444 XQ", "ProRes 4444", "ProRes 422 HQ", "ProRes 422", "ProRes 422 LT"],
+    resolutions: [
+      "S16 HD",
+      "HD",
+      "2K",
+      "3.2K",
+      "4K UHD",
+      "4:3 2.8K",
+      "2.39:1 2K Anamorphic",
+      "HD Anamorphic",
+      "ARRIRAW 16:9 2.8K",
+      "Open Gate 3.4K"
+    ],
+    colorSpaces: ["LogC3", "AWG3"]
+  },
+  "ARRI ALEXA MINI LF": {
+    codecs: ["ARRIRAW", "ProRes 4444 XQ", "ProRes 4444", "ProRes 422 HQ", "ProRes 422", "ProRes 422 LT"],
+    resolutions: [
+      "4.5K LF 3:2 Open Gate",
+      "4.5K LF 2.39:1",
+      "4.3K LF 16:9",
+      "3.8K LF 16:9",
+      "2K Full HD",
+      "2.8K LF 1:1",
+      "3.4K S35 3:2",
+      "3.2K S35 16:9",
+      "3.2K S35 4:3",
+      "2.8K S35 16:9"
+    ],
+    colorSpaces: ["LogC3", "AWG3"]
+  },
+  "FX6": {
+    codecs: ["XAVC-I", "XAVC-L", "RAW"],
+    resolutions: [
+      "4K DCI",
+      "4K UHD",
+      "1080p"
+    ],
+    colorSpaces: ["S-Gamut3.Cine", "S-Gamut3"]
+  },
+  "FX3": {
+    codecs: ["XAVC S-I", "XAVC S", "XAVC HS"],
+    resolutions: [
+      "4K DCI",
+      "4K UHD",
+      "1080p"
+    ],
+    colorSpaces: ["S-Gamut3.Cine", "S-Gamut3"]
+  },
+  "RED KOMODO 6K": {
+    codecs: ["REDCODE RAW", "ProRes 422 HQ", "ProRes 422"],
+    resolutions: [
+      "6K 17:9",
+      "6K 2.4:1",
+      "6K 2:1",
+      "6K 16:9",
+      "5K 17:9",
+      "4K 17:9",
+      "4K 16:9",
+      "2K 17:9"
+    ],
+    fixedColorSpace: "REDWideGamutRGB"
+  },
+  "BMPCC6K": {
+    codecs: [
+      "Blackmagic RAW 3:1", "Blackmagic RAW 5:1", "Blackmagic RAW 8:1", "Blackmagic RAW 12:1",
+      "Blackmagic RAW Q0", "Blackmagic RAW Q1", "Blackmagic RAW Q3", "Blackmagic RAW Q5",
+      "ProRes 422 HQ", "ProRes 422", "ProRes 422 LT", "ProRes Proxy"
+    ],
+    resolutions: [
+      "6K 17:9",
+      "6K 2.4:1",
+      "5.7K 17:9",
+      "4K DCI",
+      "4K UHD",
+      "3.7K 6:5 Anamorphic",
+      "2.8K 17:9",
+      "1080 HD"
+    ],
+    fixedColorSpace: "Blackmagic Design Generation 5"
+  },
+  "BMPCC4K": {
+    codecs: [
+      "Blackmagic RAW 3:1", "Blackmagic RAW 5:1", "Blackmagic RAW 8:1", "Blackmagic RAW 12:1",
+      "Blackmagic RAW Q0", "Blackmagic RAW Q5",
+      "ProRes 422 HQ", "ProRes 422", "ProRes 422 LT", "ProRes Proxy"
+    ],
+    resolutions: [
+      "4K DCI",
+      "4K 2.4:1",
+      "4K UHD",
+      "2.8K 4:3 Anamorphic",
+      "2.6K 16:9",
+      "1080 HD"
+    ],
+    colorSpaces: ["Blackmagic Design Generation 4", "Blackmagic Design Generation 5"]
+  },
+  "RED V-RAPTOR 8K VV": {
+    codecs: ["REDCODE RAW HQ", "REDCODE RAW MQ", "REDCODE RAW LQ"],
+    resolutions: [
+      "8K 17:9", "8K 2:1", "8K 2.4:1", "8K 16:9", "8K 1:1",
+      "7K 17:9", "7K 2:1", "7K 2.4:1", "7K 16:9", "7K 1:1",
+      "6K 17:9", "6K 2:1", "6K 2.4:1", "6K 16:9", "6K 1:1",
+      "5K 17:9", "5K 2:1", "5K 2.4:1", "5K 16:9", "5K 1:1",
+      "4K 17:9", "4K 2:1", "4K 2.4:1", "4K 16:9", "4K 1:1",
+      "3K 17:9", "3K 2:1", "3K 2.4:1", "3K 16:9", "3K 1:1",
+      "2K 17:9", "2K 2:1", "2K 2.4:1", "2K 16:9", "2K 1:1"
+    ],
+    fixedColorSpace: "REDWideGamutRGB"
+  },
+  "ARRIFLEX SR3": {
+    codecs: ["Película 16 mm"],
+    resolutions: [
+      "Normal 16",
+      "Super 16"
+    ],
+    colorSpaces: [
+      "Kodak VISION3 50D 7203",
+      "Kodak VISION3 200T 7213",
+      "Kodak VISION3 250D 7207",
+      "Kodak VISION3 500T 7219",
+      "Kodak VERITA 200D 7206",
+      "Kodak EASTMAN DOUBLE-X 7222",
+      "Kodak EKTACHROME 100D 7294",
+      "Kodak TRI-X 7266"
+    ]
+  }
+};
+
 // --- NAVEGACIÓN ---
 const views = {
   home: document.getElementById('view-home'),
@@ -41,16 +202,150 @@ document.getElementById('btnBackToProjects').addEventListener('click', () => {
   showView('myProjects');
 });
 
+// Inicialización de eventos para dependencias de cámara
+document.addEventListener('DOMContentLoaded', () => {
+  populateCameraModelOptions();
+  setupCameraModelListener();
+  setupEntriesViewAndExport();
+});
+
+function populateCameraModelOptions() {
+  const camModelEl = document.getElementById('p_cam_model');
+  if (camModelEl && camModelEl.tagName === 'SELECT') {
+    camModelEl.innerHTML = '<option value="">- Seleccionar cámara -</option>';
+    CAMERA_MODELS.forEach(model => {
+      const opt = document.createElement('option');
+      opt.value = model;
+      opt.textContent = model;
+      camModelEl.appendChild(opt);
+    });
+  }
+}
+
+function setupCameraModelListener() {
+  const camModelEl = document.getElementById('p_cam_model');
+  if (camModelEl) {
+    camModelEl.addEventListener('change', (e) => {
+      updateCameraDependentFields(e.target.value);
+    });
+  }
+}
+
+function updateCameraDependentFields(selectedCamera, savedCodec = '', savedRes = '', savedColor = '') {
+  const codecEl = document.getElementById('p_cam_codec');
+  const resEl = document.getElementById('p_cam_res');
+  const colorEl = document.getElementById('p_cam_colorspace');
+
+  if (!codecEl || !resEl || !colorEl) return;
+
+  const specs = CAMERA_SPECS[selectedCamera];
+
+  // 1. GESTIÓN DE CODECS (Desplegable vs Input libre)
+  if (specs && specs.codecs) {
+    if (codecEl.tagName !== 'SELECT') {
+      transformElementToSelect(codecEl, 'p_cam_codec');
+    }
+    const selectCodec = document.getElementById('p_cam_codec');
+    selectCodec.innerHTML = '<option value="">- Seleccionar códec -</option>';
+    specs.codecs.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c;
+      opt.textContent = c;
+      if (c === savedCodec) opt.selected = true;
+      selectCodec.appendChild(opt);
+    });
+  } else {
+    if (codecEl.tagName === 'SELECT') {
+      transformElementToInput(codecEl, 'p_cam_codec', 'text');
+    }
+    document.getElementById('p_cam_codec').value = savedCodec;
+  }
+
+  // 2. GESTIÓN DE RESOLUCIONES (Desplegable vs Input libre)
+  if (specs && specs.resolutions) {
+    if (resEl.tagName !== 'SELECT') {
+      transformElementToSelect(resEl, 'p_cam_res');
+    }
+    const selectRes = document.getElementById('p_cam_res');
+    selectRes.innerHTML = '<option value="">- Seleccionar resolución -</option>';
+    specs.resolutions.forEach(r => {
+      const opt = document.createElement('option');
+      opt.value = r;
+      opt.textContent = r;
+      if (r === savedRes) opt.selected = true;
+      selectRes.appendChild(opt);
+    });
+  } else {
+    if (resEl.tagName === 'SELECT') {
+      transformElementToInput(resEl, 'p_cam_res', 'text');
+    }
+    document.getElementById('p_cam_res').value = savedRes;
+  }
+
+  // 3. GESTIÓN DE ESPACIO DE COLOR / STOCKS (Fijo bloqueado u opciones desplegables)
+  if (specs && specs.fixedColorSpace) {
+    if (colorEl.tagName === 'SELECT') {
+      transformElementToInput(colorEl, 'p_cam_colorspace', 'text');
+    }
+    const inputColor = document.getElementById('p_cam_colorspace');
+    inputColor.value = specs.fixedColorSpace;
+    inputColor.readOnly = true;
+    inputColor.style.opacity = '0.7';
+    inputColor.style.cursor = 'not-allowed';
+  } else if (specs && specs.colorSpaces) {
+    if (colorEl.tagName !== 'SELECT') {
+      transformElementToSelect(colorEl, 'p_cam_colorspace');
+    }
+    const selectColor = document.getElementById('p_cam_colorspace');
+    selectColor.innerHTML = '<option value="">- Seleccionar opción -</option>';
+    specs.colorSpaces.forEach(cs => {
+      const opt = document.createElement('option');
+      opt.value = cs;
+      opt.textContent = cs;
+      if (cs === savedColor) opt.selected = true;
+      selectColor.appendChild(opt);
+    });
+    selectColor.readOnly = false;
+    selectColor.style.opacity = '1';
+    selectColor.style.cursor = 'pointer';
+  } else {
+    if (colorEl.tagName === 'SELECT') {
+      transformElementToInput(colorEl, 'p_cam_colorspace', 'text');
+    }
+    const inputColor = document.getElementById('p_cam_colorspace');
+    inputColor.readOnly = false;
+    inputColor.style.opacity = '1';
+    inputColor.style.cursor = 'text';
+    inputColor.value = savedColor;
+  }
+}
+
+// Helpers para transformar dinámicamente elementos de input a select y viceversa
+function transformElementToSelect(element, id) {
+  const select = document.createElement('select');
+  select.id = id;
+  select.className = element.className;
+  select.style.cssText = element.style.cssText;
+  element.parentNode.replaceChild(select, element);
+}
+
+function transformElementToInput(element, id, type) {
+  const input = document.createElement('input');
+  input.type = type;
+  input.id = id;
+  input.className = element.className;
+  input.style.cssText = element.style.cssText;
+  element.parentNode.replaceChild(input, element);
+}
+
 // --- ESTADOS DE EDICIÓN, INFO CÁMARA, FILTROS INTERNOS, LENTES Y FILTROS ---
 let editingProjectId = null; 
 
-// Filtros Internos
 let projectInternalFilters = []; 
 const pInternalFilterInput = document.getElementById('p_internal_filter_input');
 const btnAddInternalFilter = document.getElementById('btnAddInternalFilter');
 const savedInternalFiltersContainer = document.getElementById('savedInternalFiltersContainer');
 
-// Lentes
 let tempCurrentSetLenses = [];
 let projectLensSets = []; 
 let editingLensSetIndex = null; 
@@ -62,7 +357,6 @@ const btnAddSet = document.getElementById('btnAddSet');
 const currentSetTags = document.getElementById('currentSetTags');
 const savedSetsContainer = document.getElementById('savedSetsContainer');
 
-// Filtros
 let tempCurrentSetFilters = [];
 let projectFilterSets = []; 
 let editingFilterSetIndex = null; 
@@ -277,7 +571,7 @@ function renderSavedFilterSets() {
         <h4 class="lens-set-card__title">${set.name}</h4>
         <div>
           <button type="button" onclick="editFilterSet(${index})" style="background:none; border:none; color:var(--amber); cursor:pointer; margin-right:8px;">Editar</button>
-          <button type="button" onclick="removeLensSet(${index})" style="background:none; border:none; color:var(--text-faint); cursor:pointer;">Borrar</button>
+          <button type="button" onclick="removeFilterSet(${index})" style="background:none; border:none; color:var(--text-faint); cursor:pointer;">Borrar</button>
         </div>
       </div>
       <div style="font-size:12px; color:var(--text-lo);">${formattedFilters}</div>
@@ -331,6 +625,7 @@ function openNewProjectCreation() {
   
   document.getElementById('p_cam_letter').value = '';
   document.getElementById('p_cam_model').value = '';
+  updateCameraDependentFields('');
   document.getElementById('p_cam_codec').value = '';
   document.getElementById('p_cam_res').value = '';
   document.getElementById('p_cam_colorspace').value = '';
@@ -356,10 +651,11 @@ function openProjectEdit(proj) {
   document.getElementById('p_prod').value = proj.producer || '';
 
   document.getElementById('p_cam_letter').value = proj.cameraLetter || '';
-  document.getElementById('p_cam_model').value = proj.cameraModel || '';
-  document.getElementById('p_cam_codec').value = proj.cameraCodec || '';
-  document.getElementById('p_cam_res').value = proj.cameraResolution || '';
-  document.getElementById('p_cam_colorspace').value = proj.cameraColorSpace || '';
+  const camModelVal = proj.cameraModel || '';
+  document.getElementById('p_cam_model').value = camModelVal;
+  
+  updateCameraDependentFields(camModelVal, proj.cameraCodec || '', proj.cameraResolution || '', proj.cameraColorSpace || '');
+
   document.getElementById('p_cam_aspect').value = proj.cameraAspectRatio || '';
   document.getElementById('p_cam_serial').value = proj.cameraSerial || '';
 
@@ -472,6 +768,7 @@ document.getElementById('newProjectForm').addEventListener('submit', (e) => {
       saveProjects();
       editingProjectId = null;
       e.target.reset();
+      updateCameraDependentFields('');
       resetSetsForms();
       openProject(proj);
     }
@@ -480,6 +777,7 @@ document.getElementById('newProjectForm').addEventListener('submit', (e) => {
     projects.unshift(newProject);
     saveProjects();
     e.target.reset();
+    updateCameraDependentFields('');
     resetSetsForms();
     openProject(newProject);
   }
@@ -541,6 +839,104 @@ const btnAddFilterToEntry = document.getElementById('btnAddFilterToEntry');
 const entryFilterTags = document.getElementById('entryFilterTags');
 const btnSubmitEntry = document.getElementById('btnSubmitEntry');
 const btnCancelEditEntry = document.getElementById('btnCancelEditEntry');
+
+// --- SETUP VISTA TOMAS Y EXPORTACIÓN ---
+function setupEntriesViewAndExport() {
+  const entryFormActions = document.getElementById('entryForm');
+  if (entryFormActions && !document.getElementById('btnRestoreLastTake')) {
+    const submitBtnParent = btnSubmitEntry.parentElement;
+    
+    const btnRestore = document.createElement('button');
+    btnRestore.type = 'button';
+    btnRestore.id = 'btnRestoreLastTake';
+    btnRestore.textContent = 'Recuperar última toma';
+    btnRestore.style.cssText = 'background: var(--surface-2, #262626); color: var(--amber); border: 1px solid var(--amber); padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%; margin-bottom: 8px; font-size: 13px;';
+    btnRestore.onclick = restoreLastTake;
+    
+    submitBtnParent.insertBefore(btnRestore, btnSubmitEntry);
+  }
+
+  const entriesTopbar = document.querySelector('#view-entries .topbar');
+  if (entriesTopbar && !entriesTopbar.querySelector('.btn-pdf-export')) {
+    const btnExport = document.createElement('button');
+    btnExport.className = 'btn-pdf-export';
+    btnExport.textContent = 'Guardar y Exportar a PDF';
+    btnExport.style.cssText = 'background: var(--amber); color: #000; border: none; padding: 6px 10px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: bold; margin-left: auto;';
+    btnExport.onclick = exportToPDF;
+    
+    entriesTopbar.style.display = 'flex';
+    entriesTopbar.style.alignItems = 'center';
+    entriesTopbar.appendChild(btnExport);
+  }
+
+  const printStyle = document.createElement('style');
+  printStyle.innerHTML = `
+    @media print {
+      @page {
+        size: landscape;
+        margin: 1cm;
+      }
+      body { background: #fff !important; color: #000 !important; margin: 0; padding: 0; }
+      
+      #view-home, #view-new-project, #view-my-projects, #view-entries > *:not(#printArea), .bottom-nav { display: none !important; }
+      
+      #printArea { display: block !important; width: 100%; max-width: 100%; color: #000; font-family: sans-serif; }
+      
+      .pdf-header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; }
+      .pdf-header h1 { font-size: 24px; margin: 0; font-weight: 800; letter-spacing: 1px; }
+      .pdf-header h2 { font-size: 16px; margin: 5px 0 0 0; font-weight: 600; text-transform: uppercase; }
+      
+      .pdf-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; font-size: 11px; line-height: 1.4; width: 100%; }
+      .pdf-info-box { border: 1px solid #000; padding: 10px; border-radius: 4px; }
+      .pdf-info-box strong { font-size: 12px; display: block; border-bottom: 1px solid #ccc; margin-bottom: 5px; padding-bottom: 3px; }
+      
+      .pdf-table { width: 100%; max-width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 10px; page-break-inside: auto; table-layout: auto; }
+      .pdf-table tr { page-break-inside: avoid; page-break-after: auto; }
+      .pdf-table th, .pdf-table td { border: 1px solid #000; padding: 4px; text-align: left; vertical-align: top; color: #000; }
+      .pdf-table th { background-color: #e0e0e0 !important; -webkit-print-color-adjust: exact; font-weight: bold; text-align: center; white-space: nowrap; }
+      .pdf-table td { text-align: center; }
+      
+      .pdf-table td:nth-child(15) { text-align: left; }
+      
+      .pdf-take-good td { background-color: #d4edda !important; -webkit-print-color-adjust: exact; }
+    }
+  `;
+  document.head.appendChild(printStyle);
+}
+
+function restoreLastTake() {
+  if (!currentEntries || currentEntries.length === 0) {
+    alert('No hay ninguna toma anterior registrada en este proyecto.');
+    return;
+  }
+
+  const last = currentEntries[0];
+
+  document.getElementById('f_roll').value = last.roll || '';
+  document.getElementById('f_card').value = last.card || '';
+  document.getElementById('f_clip').value = last.clip || '';
+  
+  if (document.getElementById('f_internal_filter')) {
+    document.getElementById('f_internal_filter').value = last.internalFilter || '';
+  }
+  
+  document.getElementById('f_sequence').value = last.sequence || '';
+  document.getElementById('f_shot').value = last.shot || '';
+  document.getElementById('f_take').value = last.take || '';
+  document.getElementById('f_lens').value = last.lens || '';
+  document.getElementById('f_ft').value = last.ft || '';
+  document.getElementById('f_k').value = last.k || '';
+  document.getElementById('f_iso').value = last.iso || '';
+  document.getElementById('f_shutter').value = last.shutter || '';
+  document.getElementById('f_fps').value = last.fps || '';
+  document.getElementById('f_note').value = last.note || '';
+
+  tempEntryFilters = last.filters ? [...last.filters] : (last.filter ? [last.filter] : []);
+  renderEntryFilterTags();
+
+  goodPressed = Boolean(last.good);
+  goodToggle.setAttribute('aria-pressed', String(goodPressed));
+}
 
 btnAddFilterToEntry.addEventListener('click', () => {
   const val = fFilterSelect.value;
@@ -763,7 +1159,7 @@ function renderEntries() {
     const opticsContent = en.lens ? `${en.lens}` : '';
 
     const allFiltersLines = [
-      en.internalFilter ? en.internalFilter : '',
+      en.internalFilter ? `INT F. - ${en.internalFilter}` : '',
       ...entryFiltersList
     ].filter(Boolean);
     const filtersContent = allFiltersLines.length > 0 ? allFiltersLines.map(f => `${f}`).join('<br>') : '';
@@ -923,62 +1319,10 @@ function renderProjects() {
   });
 }
 
-// --- EXPORTAR A PDF (IMPRESIÓN NATIVA ESTILIZADA SIN INTERFERIR EN LA VISTA) ---
-document.addEventListener('DOMContentLoaded', () => {
-  const entriesTopbar = document.querySelector('#view-entries .topbar');
-  if (entriesTopbar) {
-    const btnExport = document.createElement('button');
-    btnExport.textContent = 'Guardar y Exportar a PDF';
-    btnExport.style.cssText = 'background: var(--amber); color: #000; border: none; padding: 6px 10px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: bold; margin-left: auto;';
-    btnExport.onclick = exportToPDF;
-    
-    entriesTopbar.style.display = 'flex';
-    entriesTopbar.style.alignItems = 'center';
-    entriesTopbar.appendChild(btnExport);
-  }
-
-  // Estilos de impresión profesionales orientados a hoja horizontal (landscape)
-  const printStyle = document.createElement('style');
-  printStyle.innerHTML = `
-    @media print {
-      @page {
-        size: landscape;
-        margin: 1cm;
-      }
-      body { background: #fff !important; color: #000 !important; margin: 0; padding: 0; }
-      
-      /* Oculta toda la app para mostrar solo el reporte de impresión */
-      #view-home, #view-new-project, #view-my-projects, #view-entries > *:not(#printArea), .bottom-nav { display: none !important; }
-      
-      #printArea { display: block !important; width: 100%; max-width: 100%; color: #000; font-family: sans-serif; }
-      
-      .pdf-header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; }
-      .pdf-header h1 { font-size: 24px; margin: 0; font-weight: 800; letter-spacing: 1px; }
-      .pdf-header h2 { font-size: 16px; margin: 5px 0 0 0; font-weight: 600; text-transform: uppercase; }
-      
-      .pdf-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; font-size: 11px; line-height: 1.4; width: 100%; }
-      .pdf-info-box { border: 1px solid #000; padding: 10px; border-radius: 4px; }
-      .pdf-info-box strong { font-size: 12px; display: block; border-bottom: 1px solid #ccc; margin-bottom: 5px; padding-bottom: 3px; }
-      
-      .pdf-table { width: 100%; max-width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 10px; page-break-inside: auto; table-layout: auto; }
-      .pdf-table tr { page-break-inside: avoid; page-break-after: auto; }
-      .pdf-table th, .pdf-table td { border: 1px solid #000; padding: 4px; text-align: left; vertical-align: top; color: #000; }
-      .pdf-table th { background-color: #e0e0e0 !important; -webkit-print-color-adjust: exact; font-weight: bold; text-align: center; white-space: nowrap; }
-      .pdf-table td { text-align: center; }
-      
-      .pdf-table td:nth-child(15) { text-align: left; }
-      
-      .pdf-take-good td { background-color: #d4edda !important; -webkit-print-color-adjust: exact; }
-    }
-  `;
-  document.head.appendChild(printStyle);
-});
-
 function exportToPDF() {
   const proj = projects.find(p => p.id === currentProjectId);
   if (!proj) return;
 
-  // Creamos temporalmente el contenedor de impresión si no existe
   let printArea = document.getElementById('printArea');
   if (!printArea) {
     printArea = document.createElement('div');
@@ -1070,10 +1414,8 @@ function exportToPDF() {
     </table>
   `;
 
-  // Lanzamos la orden de impresión nativa
   window.print();
 
-  // Limpiamos inmediatamente el contenido de impresión para que la app web en pantalla siga intacta y editable
   setTimeout(() => {
     printArea.innerHTML = '';
   }, 500);

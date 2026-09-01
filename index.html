@@ -55,10 +55,20 @@
               <span>Cámara (A, B, C...)</span>
               <input type="text" id="p_cam_letter" placeholder="Ej. A">
             </label>
-            <label class="field" style="flex: 3;">
-              <span>Modelo de Cámara</span>
-              <input type="text" id="p_cam_model" placeholder="Ej. ARRI Alexa Mini LF">
-            </label>
+            <label for="p_cam_model">Modelo de Cámara</label>
+<select id="p_cam_model" class="input-field" style="width: 100%; background: var(--surface-2, #1a1a1a); border: 1px solid var(--border, #333); color: var(--text, #fff); padding: 10px; border-radius: 6px; font-size: 14px;">
+  <option value="">- Seleccionar cámara -</option>
+  <option value="ARRI ALEXA 35">ARRI ALEXA 35</option>
+  <option value="ARRI ALEXA MINI">ARRI ALEXA MINI</option>
+  <option value="ARRI ALEXA MINI LF">ARRI ALEXA MINI LF</option>
+  <option value="ARRIFLEX SR3">ARRIFLEX SR3</option>
+  <option value="FX3">FX3</option>
+  <option value="FX6">FX6</option>
+  <option value="BMPCC6K">BMPCC6K</option>
+  <option value="BMPCC4K">BMPCC4K</option>
+  <option value="RED Komodo">RED Komodo</option>
+  <option value="RED RAPTOR VV">RED RAPTOR VV</option>
+</select>
           </div>
 
           <div class="field-row" style="margin-bottom: 12px;">
