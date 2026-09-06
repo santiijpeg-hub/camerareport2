@@ -240,11 +240,8 @@ function updateCameraDependentFields(selectedCamera, savedCodec = '', savedRes =
 
   const specs = CAMERA_SPECS[selectedCamera];
 
-  // 1. GESTIÓN DE CODECS (Desplegable vs Input libre)
   if (specs && specs.codecs) {
-    if (codecEl.tagName !== 'SELECT') {
-      transformElementToSelect(codecEl, 'p_cam_codec');
-    }
+    if (codecEl.tagName !== 'SELECT') transformElementToSelect(codecEl, 'p_cam_codec');
     const selectCodec = document.getElementById('p_cam_codec');
     selectCodec.innerHTML = '<option value="">- Seleccionar códec -</option>';
     specs.codecs.forEach(c => {
@@ -255,17 +252,12 @@ function updateCameraDependentFields(selectedCamera, savedCodec = '', savedRes =
       selectCodec.appendChild(opt);
     });
   } else {
-    if (codecEl.tagName === 'SELECT') {
-      transformElementToInput(codecEl, 'p_cam_codec', 'text');
-    }
+    if (codecEl.tagName === 'SELECT') transformElementToInput(codecEl, 'p_cam_codec', 'text');
     document.getElementById('p_cam_codec').value = savedCodec;
   }
 
-  // 2. GESTIÓN DE RESOLUCIONES (Desplegable vs Input libre)
   if (specs && specs.resolutions) {
-    if (resEl.tagName !== 'SELECT') {
-      transformElementToSelect(resEl, 'p_cam_res');
-    }
+    if (resEl.tagName !== 'SELECT') transformElementToSelect(resEl, 'p_cam_res');
     const selectRes = document.getElementById('p_cam_res');
     selectRes.innerHTML = '<option value="">- Seleccionar resolución -</option>';
     specs.resolutions.forEach(r => {
@@ -276,26 +268,19 @@ function updateCameraDependentFields(selectedCamera, savedCodec = '', savedRes =
       selectRes.appendChild(opt);
     });
   } else {
-    if (resEl.tagName === 'SELECT') {
-      transformElementToInput(resEl, 'p_cam_res', 'text');
-    }
+    if (resEl.tagName === 'SELECT') transformElementToInput(resEl, 'p_cam_res', 'text');
     document.getElementById('p_cam_res').value = savedRes;
   }
 
-  // 3. GESTIÓN DE ESPACIO DE COLOR / STOCKS (Fijo bloqueado u opciones desplegables)
   if (specs && specs.fixedColorSpace) {
-    if (colorEl.tagName === 'SELECT') {
-      transformElementToInput(colorEl, 'p_cam_colorspace', 'text');
-    }
+    if (colorEl.tagName === 'SELECT') transformElementToInput(colorEl, 'p_cam_colorspace', 'text');
     const inputColor = document.getElementById('p_cam_colorspace');
     inputColor.value = specs.fixedColorSpace;
     inputColor.readOnly = true;
     inputColor.style.opacity = '0.7';
     inputColor.style.cursor = 'not-allowed';
   } else if (specs && specs.colorSpaces) {
-    if (colorEl.tagName !== 'SELECT') {
-      transformElementToSelect(colorEl, 'p_cam_colorspace');
-    }
+    if (colorEl.tagName !== 'SELECT') transformElementToSelect(colorEl, 'p_cam_colorspace');
     const selectColor = document.getElementById('p_cam_colorspace');
     selectColor.innerHTML = '<option value="">- Seleccionar opción -</option>';
     specs.colorSpaces.forEach(cs => {
@@ -309,9 +294,7 @@ function updateCameraDependentFields(selectedCamera, savedCodec = '', savedRes =
     selectColor.style.opacity = '1';
     selectColor.style.cursor = 'pointer';
   } else {
-    if (colorEl.tagName === 'SELECT') {
-      transformElementToInput(colorEl, 'p_cam_colorspace', 'text');
-    }
+    if (colorEl.tagName === 'SELECT') transformElementToInput(colorEl, 'p_cam_colorspace', 'text');
     const inputColor = document.getElementById('p_cam_colorspace');
     inputColor.readOnly = false;
     inputColor.style.opacity = '1';
@@ -320,7 +303,6 @@ function updateCameraDependentFields(selectedCamera, savedCodec = '', savedRes =
   }
 }
 
-// Helpers para transformar dinámicamente elementos de input a select y viceversa
 function transformElementToSelect(element, id) {
   const select = document.createElement('select');
   select.id = id;
@@ -904,6 +886,26 @@ function setupEntriesViewAndExport() {
   document.head.appendChild(printStyle);
 }
 
+// --- ACTUALIZACIÓN VISUAL DEL BOTÓN GOOD TOMA ---
+let goodPressed = false;
+const goodToggle = document.getElementById('goodToggle');
+
+function updateGoodToggleVisuals(isGood) {
+  if (isGood) {
+    goodToggle.style.backgroundColor = 'var(--amber, #f59e0b)';
+    goodToggle.style.color = '#000';
+  } else {
+    goodToggle.style.backgroundColor = '';
+    goodToggle.style.color = '';
+  }
+}
+
+goodToggle.addEventListener('click', () => {
+  goodPressed = !goodPressed;
+  goodToggle.setAttribute('aria-pressed', String(goodPressed));
+  updateGoodToggleVisuals(goodPressed);
+});
+
 function restoreLastTake() {
   if (!currentEntries || currentEntries.length === 0) {
     alert('No hay ninguna toma anterior registrada en este proyecto.');
@@ -936,6 +938,7 @@ function restoreLastTake() {
 
   goodPressed = Boolean(last.good);
   goodToggle.setAttribute('aria-pressed', String(goodPressed));
+  updateGoodToggleVisuals(goodPressed);
 }
 
 btnAddFilterToEntry.addEventListener('click', () => {
@@ -984,13 +987,6 @@ function loadFiltersIntoSelect(proj) {
     fFilterSelect.appendChild(opt);
   }
 }
-
-let goodPressed = false;
-const goodToggle = document.getElementById('goodToggle');
-goodToggle.addEventListener('click', () => {
-  goodPressed = !goodPressed;
-  goodToggle.setAttribute('aria-pressed', String(goodPressed));
-});
 
 document.getElementById('entryForm').addEventListener('submit', (e) => {
   e.preventDefault();
@@ -1056,6 +1052,7 @@ document.getElementById('entryForm').addEventListener('submit', (e) => {
     document.getElementById('f_note').value = '';
     goodPressed = false;
     goodToggle.setAttribute('aria-pressed', 'false');
+    updateGoodToggleVisuals(false);
     document.getElementById('f_take').focus();
     return;
   }
@@ -1067,6 +1064,7 @@ document.getElementById('entryForm').addEventListener('submit', (e) => {
   renderEntryFilterTags();
   goodPressed = false;
   goodToggle.setAttribute('aria-pressed', 'false');
+  updateGoodToggleVisuals(false);
   document.getElementById('f_sequence').focus();
 });
 
@@ -1079,6 +1077,7 @@ btnCancelEditEntry.addEventListener('click', () => {
   btnCancelEditEntry.classList.add('hidden');
   goodPressed = false;
   goodToggle.setAttribute('aria-pressed', 'false');
+  updateGoodToggleVisuals(false);
 });
 
 function deleteEntry(id) {
@@ -1117,6 +1116,7 @@ function editEntry(id) {
 
   goodPressed = Boolean(entry.good);
   goodToggle.setAttribute('aria-pressed', String(goodPressed));
+  updateGoodToggleVisuals(goodPressed);
 
   btnSubmitEntry.textContent = 'Actualizar toma';
   btnCancelEditEntry.classList.remove('hidden');
