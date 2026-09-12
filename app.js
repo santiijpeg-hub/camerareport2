@@ -928,6 +928,7 @@ function restoreLastTake() {
   document.getElementById('f_lens').value = last.lens || '';
   document.getElementById('f_ft').value = last.ft || '';
   document.getElementById('f_k').value = last.k || '';
+  document.getElementById('f_tint').value = last.tint || '';
   document.getElementById('f_iso').value = last.iso || '';
   document.getElementById('f_shutter').value = last.shutter || '';
   document.getElementById('f_fps').value = last.fps || '';
@@ -1004,6 +1005,7 @@ document.getElementById('entryForm').addEventListener('submit', (e) => {
     filters: [...tempEntryFilters],
     ft: document.getElementById('f_ft').value.trim(),
     k: document.getElementById('f_k').value.trim(),
+    tint: document.getElementById('f_tint').value.trim(),
     iso: document.getElementById('f_iso').value.trim(),
     shutter: document.getElementById('f_shutter').value.trim(),
     fps: document.getElementById('f_fps').value.trim(),
@@ -1106,6 +1108,7 @@ function editEntry(id) {
   document.getElementById('f_lens').value = entry.lens || '';
   document.getElementById('f_ft').value = entry.ft || '';
   document.getElementById('f_k').value = entry.k || '';
+  document.getElementById('f_tint').value = entry.tint || '';
   document.getElementById('f_iso').value = entry.iso || '';
   document.getElementById('f_shutter').value = entry.shutter || '';
   document.getElementById('f_fps').value = entry.fps || '';
@@ -1167,6 +1170,7 @@ function renderEntries() {
     const camInfoLines = [
       en.ft ? `F/T: ${en.ft}` : '',
       en.k ? `K: ${en.k}` : '',
+      en.tint ? `Tint: ${en.tint}` : '',
       en.iso ? `ISO: ${en.iso}` : '',
       en.fps ? `FPS: ${en.fps}` : ''
     ].filter(Boolean);
@@ -1350,7 +1354,7 @@ function exportToPDF() {
         <td>${en.take || ''}</td>
         <td>${en.lens || ''}</td>
         <td>${en.ft || ''}</td>
-        <td>${en.k ? en.k + 'K' : ''}</td>
+        <td>${en.k ? en.k + 'K' : ''}${en.tint ? ' (' + en.tint + ')' : ''}</td>
         <td>${en.iso || ''}</td>
         <td>${en.fps || ''}</td>
         <td>${internalFilterClean}</td>
@@ -1399,7 +1403,7 @@ function exportToPDF() {
           <th>TOMA</th>
           <th>ÓPTICA</th>
           <th>F/T</th>
-          <th>K</th>
+          <th>K / TINT</th>
           <th>ISO</th>
           <th>FPS</th>
           <th>INT F</th>
