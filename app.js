@@ -851,36 +851,58 @@ function setupEntriesViewAndExport() {
     entriesTopbar.appendChild(btnExport);
   }
 
+  // Eliminamos estilos previos si existieran para aplicar los nuevos
+  const oldStyle = document.getElementById('printStyleSheet');
+  if (oldStyle) oldStyle.remove();
+
   const printStyle = document.createElement('style');
+  printStyle.id = 'printStyleSheet';
   printStyle.innerHTML = `
     @media print {
       @page {
-        size: landscape;
+        size: portrait; /* FORMATO VERTICAL */
         margin: 1cm;
       }
       body { background: #fff !important; color: #000 !important; margin: 0; padding: 0; }
       
       #view-home, #view-new-project, #view-my-projects, #view-entries > *:not(#printArea), .bottom-nav { display: none !important; }
       
-      #printArea { display: block !important; width: 100%; max-width: 100%; color: #000; font-family: sans-serif; }
+      #printArea { display: block !important; width: 100%; max-width: 100%; color: #000; font-family: sans-serif; background: #fff !important; }
       
-      .pdf-header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; }
-      .pdf-header h1 { font-size: 24px; margin: 0; font-weight: 800; letter-spacing: 1px; }
-      .pdf-header h2 { font-size: 16px; margin: 5px 0 0 0; font-weight: 600; text-transform: uppercase; }
+      .pdf-header { text-align: center; margin-bottom: 15px; border-bottom: 2px solid #000; padding-bottom: 10px; }
+      .pdf-header h1 { font-size: 20px; margin: 0; font-weight: 800; letter-spacing: 1px; }
+      .pdf-header h2 { font-size: 14px; margin: 5px 0 0 0; font-weight: 600; text-transform: uppercase; }
       
-      .pdf-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; font-size: 11px; line-height: 1.4; width: 100%; }
-      .pdf-info-box { border: 1px solid #000; padding: 10px; border-radius: 4px; }
-      .pdf-info-box strong { font-size: 12px; display: block; border-bottom: 1px solid #ccc; margin-bottom: 5px; padding-bottom: 3px; }
+      .pdf-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; font-size: 10px; line-height: 1.4; width: 100%; }
+      .pdf-info-box { border: 1px solid #000; padding: 8px; border-radius: 4px; }
+      .pdf-info-box strong { font-size: 11px; display: block; border-bottom: 1px solid #ccc; margin-bottom: 4px; padding-bottom: 2px; }
       
-      .pdf-table { width: 100%; max-width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 10px; page-break-inside: auto; table-layout: auto; }
-      .pdf-table tr { page-break-inside: avoid; page-break-after: auto; }
-      .pdf-table th, .pdf-table td { border: 1px solid #000; padding: 4px; text-align: left; vertical-align: top; color: #000; }
-      .pdf-table th { background-color: #e0e0e0 !important; -webkit-print-color-adjust: exact; font-weight: bold; text-align: center; white-space: nowrap; }
-      .pdf-table td { text-align: center; }
+      /* REGLAS PARA LA TABLA */
+      .pdf-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 8px; table-layout: fixed; word-wrap: break-word; }
+      .pdf-table thead { display: table-header-group; } /* REPITE CABECERA EN CADA PÁGINA */
+      .pdf-table tr { page-break-inside: avoid; } /* EVITA QUE LAS FILAS SE CORTEN A LA MITAD */
       
-      .pdf-table td:nth-child(15) { text-align: left; }
+      .pdf-table th, .pdf-table td { border: 1px solid #000; padding: 4px 2px; text-align: center; vertical-align: middle; color: #000; }
+      .pdf-table th { background-color: #e0e0e0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; font-weight: bold; }
       
-      .pdf-take-good td { background-color: #d4edda !important; -webkit-print-color-adjust: exact; }
+      /* ANCHOS DE COLUMNA ESPECÍFICOS PARA VERTICAL */
+      .col-roll { width: 4.5%; }
+      .col-card { width: 5%; }
+      .col-clip { width: 5%; }
+      .col-sec { width: 4%; }
+      .col-plano { width: 4.5%; }
+      .col-toma { width: 4%; }
+      .col-optica { width: 12%; } /* Más ancha */
+      .col-ft { width: 5%; }
+      .col-k { width: 7.5%; }
+      .col-iso { width: 5%; }
+      .col-fps { width: 4%; }
+      .col-intf { width: 7%; }
+      .col-filtros { width: 13%; }
+      .col-notas { width: 16%; text-align: left !important; }
+      .col-star { width: 3.5%; }
+      
+      .pdf-take-good td { background-color: #d4edda !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     }
   `;
   document.head.appendChild(printStyle);
@@ -928,7 +950,7 @@ function restoreLastTake() {
   document.getElementById('f_lens').value = last.lens || '';
   document.getElementById('f_ft').value = last.ft || '';
   document.getElementById('f_k').value = last.k || '';
-  document.getElementById('f_tint').value = last.tint || '';
+  document.getElementById('f_tint').value = last.tint || ''; // Nuevo campo Tint
   document.getElementById('f_iso').value = last.iso || '';
   document.getElementById('f_shutter').value = last.shutter || '';
   document.getElementById('f_fps').value = last.fps || '';
@@ -1005,7 +1027,7 @@ document.getElementById('entryForm').addEventListener('submit', (e) => {
     filters: [...tempEntryFilters],
     ft: document.getElementById('f_ft').value.trim(),
     k: document.getElementById('f_k').value.trim(),
-    tint: document.getElementById('f_tint').value.trim(),
+    tint: document.getElementById('f_tint').value.trim(), // Nuevo campo Tint
     iso: document.getElementById('f_iso').value.trim(),
     shutter: document.getElementById('f_shutter').value.trim(),
     fps: document.getElementById('f_fps').value.trim(),
@@ -1051,7 +1073,7 @@ document.getElementById('entryForm').addEventListener('submit', (e) => {
       }
     }
 
-    document.getElementById('f_note').value = '';
+    // Eliminamos la limpieza de f_note para que el texto se mantenga
     goodPressed = false;
     goodToggle.setAttribute('aria-pressed', 'false');
     updateGoodToggleVisuals(false);
@@ -1108,7 +1130,7 @@ function editEntry(id) {
   document.getElementById('f_lens').value = entry.lens || '';
   document.getElementById('f_ft').value = entry.ft || '';
   document.getElementById('f_k').value = entry.k || '';
-  document.getElementById('f_tint').value = entry.tint || '';
+  document.getElementById('f_tint').value = entry.tint || ''; // Nuevo campo Tint
   document.getElementById('f_iso').value = entry.iso || '';
   document.getElementById('f_shutter').value = entry.shutter || '';
   document.getElementById('f_fps').value = entry.fps || '';
@@ -1170,7 +1192,7 @@ function renderEntries() {
     const camInfoLines = [
       en.ft ? `F/T: ${en.ft}` : '',
       en.k ? `K: ${en.k}` : '',
-      en.tint ? `Tint: ${en.tint}` : '',
+      en.tint ? `Tint: ${en.tint}` : '', // Nuevo campo Tint renderizado
       en.iso ? `ISO: ${en.iso}` : '',
       en.fps ? `FPS: ${en.fps}` : ''
     ].filter(Boolean);
@@ -1395,21 +1417,21 @@ function exportToPDF() {
     <table class="pdf-table">
       <thead>
         <tr>
-          <th>ROLL</th>
-          <th>CARD</th>
-          <th>CLIP</th>
-          <th>SEC</th>
-          <th>PLANO</th>
-          <th>TOMA</th>
-          <th>ÓPTICA</th>
-          <th>F/T</th>
-          <th>K / TINT</th>
-          <th>ISO</th>
-          <th>FPS</th>
-          <th>INT F</th>
-          <th>FILTROS</th>
-          <th>NOTAS</th>
-          <th>★</th>
+          <th class="col-roll">ROLL</th>
+          <th class="col-card">CARD</th>
+          <th class="col-clip">CLIP</th>
+          <th class="col-sec">SEC</th>
+          <th class="col-plano">PLANO</th>
+          <th class="col-toma">TOMA</th>
+          <th class="col-optica">ÓPTICA</th>
+          <th class="col-ft">F/T</th>
+          <th class="col-k">K/TINT</th>
+          <th class="col-iso">ISO</th>
+          <th class="col-fps">FPS</th>
+          <th class="col-intf">INT F</th>
+          <th class="col-filtros">FILTROS</th>
+          <th class="col-notas">NOTAS</th>
+          <th class="col-star">★</th>
         </tr>
       </thead>
       <tbody>
@@ -1420,6 +1442,7 @@ function exportToPDF() {
 
   window.print();
 
+  // Limpiamos después de imprimir para no afectar la interfaz
   setTimeout(() => {
     printArea.innerHTML = '';
   }, 500);
